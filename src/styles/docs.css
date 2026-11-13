@@ -1,0 +1,50 @@
+/* Starlight theme: the Orb's "spectrum" palette (cyan → indigo → violet). */
+:root {
+  --sl-color-accent-low: #1e1b4b;
+  --sl-color-accent: #6366f1;
+  --sl-color-accent-high: #c7d2fe;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #e5e7f0;
+  --sl-color-gray-2: #c2c6d6;
+  --sl-color-gray-3: #8b90a7;
+  --sl-color-gray-4: #545970;
+  --sl-color-gray-5: #353a4f;
+  --sl-color-gray-6: #1c1f2e;
+  --sl-color-black: #0b0d16;
+  --sl-font: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #e0e7ff;
+  --sl-color-accent: #4f46e5;
+  --sl-color-accent-high: #1e1b4b;
+  --sl-color-white: #0b0d16;
+  --sl-color-gray-1: #1c1f2e;
+  --sl-color-gray-2: #353a4f;
+  --sl-color-gray-3: #545970;
+  --sl-color-gray-4: #8b90a7;
+  --sl-color-gray-5: #c2c6d6;
+  --sl-color-gray-6: #eef0f6;
+  --sl-color-gray-7: #f7f8fb;
+  --sl-color-black: #ffffff;
+}
+.site-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Mermaid diagrams (see src/plugins/remark-mermaid.mjs) */
+.sl-markdown-content pre.mermaid {
+  display: flex;
+  justify-content: center;
+  margin-block: 1.5rem;
+  padding: 1rem;
+  background: transparent;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-size: 0.8rem;
+}
+.sl-markdown-content pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}

@@ -1,0 +1,107 @@
+---
+// Full-bleed WebGL background: glowing "voice waves" on a plain dark ground, in the
+// Orb's spectrum palette. Cheap by design:
+//   - renders at reduced resolution (≤ 1.25 device px per CSS px, scaled down)
+//   - pauses when off screen or when the tab is hidden
+//   - draws a single still frame under prefers-reduced-motion
+//   - falls back to a CSS gradient when WebGL is unavailable
+//
+// Pages can drive the wave energy (0..1) with:
+//   window.dispatchEvent(new CustomEvent('jargo:level', { detail: 0.8 }))
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<div class:list={['shader-bg', className]} aria-hidden="true">
+  <canvas></canvas>
+</div>
+
+<script>
+  import { createWaves } from '../lib/waves';
+
+  function init(root: HTMLElement) {
+    const canvas = root.querySelector('canvas')!;
+    const waves = createWaves(canvas);
+    if (!waves) return root.classList.add('no-webgl');
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+    let level = 0, targetLevel = 0;
+    // last: the previous frame's rAF timestamp; -1 while paused.
+    let visible = true, raf = 0, last = -1, time = 8;
+
+    const draw = () => waves.draw({ time, level, mouseX: mouse.x, mouseY: mouse.y });
+
+    const resize = () => {
+      const scale = Math.min(devicePixelRatio || 1, 1.25) * 0.75;
+      waves.setSize(canvas.clientWidth * scale, canvas.clientHeight * scale);
+      if (reduced.matches || !raf) draw();
+    };
+
+    const frame = (now: number) => {
+      raf = 0;
+      // Step by the time between frame timestamps (never the time since the
+      // previous frame finished drawing, which jitters), capped after a stall.
+      const dt = last < 0 ? 0 : Math.max(0, Math.min((now - last) / 1000, 0.1));
+      last = now;
+      time += dt;
+      mouse.x += (mouse.tx - mouse.x) * Math.min(1, dt * 3);
+      mouse.y += (mouse.ty - mouse.y) * Math.min(1, dt * 3);
+      level += (targetLevel - level) * Math.min(1, dt * 6);
+      draw();
+      schedule();
+    };
+
+    const schedule = () => {
+      if (raf) return;
+      if (visible && !document.hidden && !reduced.matches) raf = requestAnimationFrame(frame);
+      else last = -1; // paused: restart the clock on resume, no jump
+    };
+
+    new ResizeObserver(resize).observe(canvas);
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      schedule();
+    }).observe(root);
+    document.addEventListener('visibilitychange', schedule);
+    reduced.addEventListener('change', () => (reduced.matches ? draw() : schedule()));
+    addEventListener('pointermove', (e) => {
+      const r = root.getBoundingClientRect();
+      mouse.tx = (e.clientX - r.left) / r.width;
+      mouse.ty = 1 - (e.clientY - r.top) / r.height;
+    }, { passive: true });
+    addEventListener('jargo:level', (e) => {
+      targetLevel = Math.max(0, Math.min(1, Number((e as CustomEvent).detail) || 0));
+      if (reduced.matches) { level = targetLevel; draw(); }
+    });
+    canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      cancelAnimationFrame(raf);
+      root.classList.add('no-webgl');
+    });
+
+    resize();
+    schedule();
+  }
+
+  document.querySelectorAll<HTMLElement>('.shader-bg').forEach(init);
+</script>
+
+<style>
+  .shader-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: #0b0d16;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .shader-bg:global(.no-webgl) canvas {
+    display: none;
+  }
+</style>

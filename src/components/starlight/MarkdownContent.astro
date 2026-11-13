@@ -1,0 +1,36 @@
+---
+// Starlight override: the default markdown wrapper, plus client-side Mermaid.
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+---
+
+<Default><slot /></Default>
+
+<script>
+  const blocks = [...document.querySelectorAll<HTMLElement>('pre.mermaid')];
+  if (blocks.length) {
+    const { default: mermaid } = await import('mermaid');
+    for (const b of blocks) b.dataset.src = b.textContent ?? '';
+
+    const render = async () => {
+      const dark = document.documentElement.dataset.theme !== 'light';
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        theme: dark ? 'dark' : 'default',
+        fontFamily: "'Inter Variable', Inter, sans-serif",
+      });
+      for (const b of blocks) {
+        b.removeAttribute('data-processed');
+        b.textContent = b.dataset.src ?? '';
+      }
+      await mermaid.run({ nodes: blocks });
+    };
+
+    await render();
+    // Re-render when the theme toggle flips light/dark.
+    new MutationObserver(render).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+  }
+</script>

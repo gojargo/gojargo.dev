@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gojargo.dev/sitemap-index.xml

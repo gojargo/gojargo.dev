@@ -1,0 +1,346 @@
+---
+import { Code } from 'astro:components';
+import Base from '../layouts/Base.astro';
+import ShaderBackground from '../components/ShaderBackground.astro';
+import DemoPlayer from '../components/DemoPlayer.astro';
+
+// Optional live demo; see README.md for the guardrails it needs.
+const liveUrl = import.meta.env.PUBLIC_DEMO_URL as string | undefined;
+
+// schema.org data for search engines: the project, and the demo video.
+const site = 'https://gojargo.dev';
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareSourceCode',
+    name: 'jargo',
+    description: 'Real-time voice agents in Go, for the browser, phone, LiveKit and WhatsApp.',
+    url: `${site}/`,
+    codeRepository: 'https://github.com/gojargo/jargo',
+    programmingLanguage: 'Go',
+    license: 'https://opensource.org/license/bsd-2-clause',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: 'jargo demo: a voice conversation with an interruption',
+    description: 'A scripted conversation with a jargo voice agent, showing end-of-turn detection and the user interrupting the bot.',
+    thumbnailUrl: `${site}/demo/poster.jpg`,
+    contentUrl: `${site}/demo/jargo-demo.mp4`,
+    uploadDate: '2026-11-13',
+    duration: 'PT38S',
+    embedUrl: `${site}/#demo`,
+  },
+];
+
+const stages = ['Audio in', 'VAD', 'STT', 'LLM', 'TTS', 'Audio out'];
+
+const features = [
+  {
+    title: 'One static binary',
+    body: 'The default build is cgo-free. Low, predictable memory, fast startup, and real concurrency for many simultaneous sessions.',
+  },
+  {
+    title: 'Standard WebRTC, self-hosted',
+    body: 'Plain Pion WebRTC: no hosted transport, no proprietary SDK, no cloud to sign up for. Ship the binary; the browser connects.',
+  },
+  {
+    title: 'Turn-taking that works',
+    body: 'Silero VAD and Smart Turn v3 run locally on ONNX, so the bot waits for a real end-of-turn instead of any pause, and the user can cut in.',
+  },
+  {
+    title: 'Pluggable providers',
+    body: 'Swap any STT, LLM or TTS behind a small interface. 50+ providers, plus single-model speech-to-speech.',
+  },
+  {
+    title: 'Concurrent by design',
+    body: 'Independent processors, each on its own goroutine. Interruptions are frames, so barge-in reaches every stage at once.',
+  },
+  {
+    title: 'Telephony included',
+    body: 'Inbound and outbound phone calls over Twilio, Telnyx, Plivo and Exotel, with DTMF and an idle watchdog.',
+  },
+];
+
+const sample = `stt := openai.NewSTT(openai.STTConfig{APIKey: key, SampleRate: opus.SampleRate})
+llm := openai.NewLLM(openai.LLMConfig{APIKey: key})
+tts := openai.NewTTS(openai.TTSConfig{APIKey: key})
+
+t := rtc.NewTransport(conn, transport.DefaultParams())
+agg := aggregators.New(frames.NewLLMContext("You are a helpful voice assistant."))
+
+task := pipeline.NewTask(pipeline.New(
+    t.Input(), stt, agg.User(), llm, tts, t.Output(), agg.Assistant(),
+), pipeline.TaskParams{})
+task.Run(ctx)`;
+---
+
+<Base title="jargo · Voice agents in Go" structuredData={structuredData}>
+  <section class="hero">
+    <ShaderBackground />
+    <div class="hero-fade"></div>
+    <div class="hero-content wrap">
+      <h1>Voice agents <span class="gradient-text">in Go.</span></h1>
+      <p class="lead">Real-time voice agents for the browser, phone, LiveKit and WhatsApp.</p>
+      <div class="actions">
+        <a class="btn primary" href="/docs/getting-started/">Get started</a>
+        <a class="btn" href="#demo">Demo</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo" class="demo wrap" aria-label="Demo">
+    <DemoPlayer src="/demo/jargo-demo.mp4" poster="/demo/poster.jpg" />
+    {
+      liveUrl && (
+        <div class="live">
+          <a class="btn primary" href={liveUrl}>Talk live</a>
+        </div>
+      )
+    }
+  </section>
+
+  <section class="pipeline wrap" aria-label="The jargo pipeline">
+    <ol>
+      {stages.map((s, i) => <li style={`--i:${i}`}>{s}</li>)}
+    </ol>
+    <p>Each stage runs on its own goroutine.</p>
+  </section>
+
+  <section class="features wrap">
+    {
+      features.map((f) => (
+        <article class="card">
+          <h3>{f.title}</h3>
+          <p>{f.body}</p>
+        </article>
+      ))
+    }
+  </section>
+
+  <section class="code wrap">
+    <div class="code-copy">
+      <h2>A pipeline is a list of processors.</h2>
+      <p>Each provider is one line. The browser connects directly to your binary.</p>
+      <div class="actions">
+        <a class="btn" href="/docs/getting-started/your-first-bot/">Your first bot</a>
+        <a class="btn" href="https://github.com/gojargo/jargo/tree/main/examples" target="_blank" rel="noopener">Examples</a>
+      </div>
+    </div>
+    <div class="code-window">
+      <div class="dots"><i></i><i></i><i></i><span>main.go</span></div>
+      <Code code={sample} lang="go" theme="github-dark-default" />
+    </div>
+  </section>
+
+</Base>
+
+<script>
+  // Cards: a soft spotlight that follows the pointer (CSS only reads the vars).
+  document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: grid;
+    align-items: center;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hero-fade {
+    position: absolute;
+    inset: auto 0 0;
+    height: 16%;
+    background: linear-gradient(transparent, var(--bg));
+    pointer-events: none;
+  }
+  .hero-content {
+    position: relative;
+    padding-top: 6rem;
+    padding-bottom: 4rem;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(2.8rem, 8vw, 6rem);
+    line-height: 1;
+    letter-spacing: -0.045em;
+    font-weight: 800;
+    text-shadow: 0 2px 40px rgb(11 13 22 / 0.6);
+  }
+  .lead {
+    max-width: 38rem;
+    margin: 1.5rem 0 2rem;
+    font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+    line-height: 1.6;
+    color: #c2c6d6;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Demo */
+  .demo {
+    position: relative;
+    padding: 2rem 0 3rem;
+    scroll-margin-top: 5rem;
+  }
+  .live {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.25rem;
+  }
+
+  /* Pipeline strip */
+  .pipeline {
+    padding: 3rem 0 4rem;
+    text-align: center;
+  }
+  .pipeline ol {
+    list-style: none;
+    margin: 0 auto;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 2.2rem;
+    position: relative;
+  }
+  .pipeline li {
+    position: relative;
+    padding: 0.55rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--bg-2);
+    font-weight: 600;
+    font-size: 0.9rem;
+    animation: pulse 3.6s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.45s);
+  }
+  .pipeline li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    width: 2.2rem;
+    height: 1px;
+    background: linear-gradient(90deg, var(--c1), var(--c3));
+    opacity: 0.6;
+  }
+  @media (max-width: 480px) {
+    .pipeline li::after {
+      display: none;
+    }
+    .pipeline ol {
+      gap: 0.5rem;
+    }
+  }
+  @keyframes pulse {
+    0%, 70%, 100% { border-color: var(--line); box-shadow: none; }
+    15% { border-color: rgb(99 102 241 / 0.8); box-shadow: 0 0 24px -4px rgb(99 102 241 / 0.7); }
+  }
+  .pipeline p {
+    color: var(--muted);
+    margin: 1.5rem 0 0;
+  }
+
+  /* Features */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    padding-bottom: 6rem;
+  }
+  .card {
+    position: relative;
+    padding: 1.6rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(400px circle at var(--mx, -999px) var(--my, -999px), rgb(99 102 241 / 0.14), transparent 60%),
+      var(--bg-2);
+    transition: border-color 0.2s;
+  }
+  .card:hover {
+    border-color: rgb(99 102 241 / 0.4);
+  }
+  .card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+  }
+  .card p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  /* Code */
+  .code {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 3rem;
+    align-items: center;
+    padding-bottom: 7rem;
+  }
+  @media (max-width: 900px) {
+    .code {
+      grid-template-columns: 1fr;
+    }
+  }
+  h2 {
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin: 0 0 1rem;
+  }
+  .code-copy p {
+    color: var(--muted);
+    line-height: 1.7;
+    margin: 0 0 1.5rem;
+  }
+  .code-window {
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: #0d1117;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -30px rgb(99 102 241 / 0.45);
+  }
+  .dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2a2f3d;
+  }
+  .dots span {
+    margin-left: 0.5rem;
+  }
+  .code-window :global(pre) {
+    margin: 0;
+    padding: 1.2rem 1.4rem;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+
+</style>
