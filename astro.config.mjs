@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightLlmsTxt from 'starlight-llms-txt';
 import remarkMermaid from './src/plugins/remark-mermaid.mjs';
 
 // Home page and demo are plain Astro pages in src/pages; Starlight owns /docs/.
@@ -26,6 +27,24 @@ export default defineConfig({
         { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
         { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
         { tag: 'meta', attrs: { name: 'twitter:image', content: 'https://gojargo.dev/og.png' } },
+      ],
+      // llms.txt, llms-full.txt and llms-small.txt, so AI assistants can read
+      // the docs as plain text.
+      plugins: [
+        starlightLlmsTxt({
+          projectName: 'jargo',
+          description:
+            'jargo is a Go framework for real-time voice agents: audio in over WebRTC, WebSocket, LiveKit or Twilio, a streaming speech-to-text, LLM and text-to-speech pipeline (or a speech-to-speech model) with turn-taking and barge-in, and audio back out. The build is cgo-free.',
+          details:
+            'Install with `go get github.com/gojargo/jargo`. The API reference is on pkg.go.dev, and runnable examples live in the examples/ directory of the repository.',
+          optionalLinks: [
+            { label: 'Go reference', url: 'https://pkg.go.dev/github.com/gojargo/jargo', description: 'API reference for every package.' },
+            { label: 'Examples', url: 'https://github.com/gojargo/jargo/tree/main/examples', description: 'Runnable bots, from one spoken sentence to a full voice agent.' },
+            { label: 'Changelog', url: 'https://github.com/gojargo/jargo/blob/main/CHANGELOG.md', description: 'Notable and breaking changes by release.' },
+          ],
+          promote: ['docs', 'docs/getting-started/**', 'docs/concepts/**'],
+          demote: ['docs/benchmarks'],
+        }),
       ],
       customCss: ['@fontsource-variable/inter', './src/styles/docs.css'],
       lastUpdated: false,
