@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightBlog from 'starlight-blog';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import remarkMermaid from './src/plugins/remark-mermaid.mjs';
 
@@ -31,6 +32,17 @@ export default defineConfig({
       // llms.txt, llms-full.txt and llms-small.txt, so AI assistants can read
       // the docs as plain text.
       plugins: [
+        // The blog at /blog/, with an RSS feed at /blog/rss.xml.
+        starlightBlog({
+          title: 'Blog',
+          prefix: 'blog',
+          postCount: 10,
+          recentPostCount: 5,
+          metrics: { readingTime: true },
+          authors: {
+            fallais: { name: 'fallais', url: 'https://github.com/fallais' },
+          },
+        }),
         starlightLlmsTxt({
           projectName: 'jargo',
           description:
@@ -62,6 +74,7 @@ export default defineConfig({
             { label: 'Go reference', link: 'https://pkg.go.dev/github.com/gojargo/jargo', attrs: { target: '_blank' } },
             { label: 'Examples', link: 'https://github.com/gojargo/jargo/tree/main/examples', attrs: { target: '_blank' } },
             { label: 'Changelog', link: 'https://github.com/gojargo/jargo/blob/main/CHANGELOG.md', attrs: { target: '_blank' } },
+            { label: 'Blog', link: '/blog/' },
             { label: 'Demo', link: '/#demo' },
           ],
         },

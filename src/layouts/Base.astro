@@ -51,6 +51,7 @@ const path = Astro.url.pathname;
       </a>
       <nav>
         <a href="/docs/" aria-current={path.startsWith('/docs') ? 'page' : undefined}>Docs</a>
+        <a href="/blog/" aria-current={path.startsWith('/blog') ? 'page' : undefined}>Blog</a>
         <a href="/#demo">Demo</a>
         <a href="https://pkg.go.dev/github.com/gojargo/jargo" class="hide-sm" target="_blank" rel="noopener">Reference</a>
         <GitHubLink />

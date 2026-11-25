@@ -1,6 +1,7 @@
 ---
-// Starlight override: the default markdown wrapper, plus client-side Mermaid.
-import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+// Starlight override: the blog plugin's markdown wrapper (Starlight's default
+// on every page but a blog post), plus client-side Mermaid.
+import Default from 'starlight-blog/overrides/MarkdownContent.astro';
 ---
 
 <Default><slot /></Default>
